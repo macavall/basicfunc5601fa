@@ -11,8 +11,8 @@ pool:
 
 variables:
   pythonVersion: '3.12'
-  functionAppName: 'your-function-app-name'      # ← CHANGE THIS
-  resourceGroupName: 'your-resource-group'       # ← CHANGE THIS
+  functionAppName: 'basicfunc5601fa'      # ← CHANGE THIS
+  resourceGroupName: 'basicfunc5601rg'       # ← CHANGE THIS
   azureSubscription: 'Your-Azure-Service-Connection-Name'  # ← CHANGE THIS (name of service connection)
 
 steps:
