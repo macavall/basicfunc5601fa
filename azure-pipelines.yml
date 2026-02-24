@@ -13,7 +13,7 @@ variables:
   pythonVersion: '3.12'
   functionAppName: 'basicfunc5601fa'      # ← CHANGE THIS
   resourceGroupName: 'basicfunc5601rg'       # ← CHANGE THIS
-  azureSubscription: 'Your-Azure-Service-Connection-Name'  # ← CHANGE THIS (name of service connection)
+  azureSubscription: 'testconnection1'  # ← CHANGE THIS (name of service connection)
 
 steps:
 
