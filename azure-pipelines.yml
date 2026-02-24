@@ -1,8 +1,7 @@
 trigger:
   branches:
     include:
-      - main               # or your branch name
-      - feature/*
+      - master
   paths:
     include:
       - '*'                # adjust if functions are in a subfolder
