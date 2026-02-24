@@ -1,19 +1,72 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
-- master
+  branches:
+    include:
+      - main               # or your branch name
+      - feature/*
+  paths:
+    include:
+      - '*'                # adjust if functions are in a subfolder
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'   # or ubuntu-24.04 if you want newer
+
+variables:
+  pythonVersion: '3.12'
+  functionAppName: 'your-function-app-name'      # ← CHANGE THIS
+  resourceGroupName: 'your-resource-group'       # ← CHANGE THIS
+  azureSubscription: 'Your-Azure-Service-Connection-Name'  # ← CHANGE THIS (name of service connection)
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+
+- task: UsePythonVersion@0
+  displayName: 'Use Python $(pythonVersion)'
+  inputs:
+    versionSpec: '$(pythonVersion)'
 
 - script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+    python -m pip install --upgrade pip
+    pip install --upgrade azure-functions azure-functions-devops-build
+    pip install -r requirements.txt --target=".python_packages/lib/python3.12/site-packages"
+  displayName: 'Install dependencies'
+
+- task: ArchiveFiles@2
+  displayName: 'Archive function app files'
+  inputs:
+    rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/functionapp.zip'
+    replaceExistingArchive: true
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish artifact'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
+
+- stage: Deploy
+  displayName: 'Deploy stage'
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - deployment: DeployToFunctionApp
+    displayName: 'Deploy to Azure Function App'
+    pool:
+      vmImage: 'ubuntu-latest'
+    environment: 'prod'               # optional – use for approval gates
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+          - task: AzureFunctionApp@2
+            displayName: 'Deploy to Azure Function'
+            inputs:
+              azureSubscription: '$(azureSubscription)'
+              appType: 'functionAppLinux'
+              appName: '$(functionAppName)'
+              package: '$(Pipeline.Workspace)/drop/functionapp.zip'
+              deploymentMethod: 'zipDeploy'
+              # Optional – only needed if you want to override runtime (usually set on app already)
+              # runtimeStack: 'PYTHON|3.12'
